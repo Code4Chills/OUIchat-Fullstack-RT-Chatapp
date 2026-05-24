@@ -5,6 +5,7 @@ import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import RealtimeTestNotice from "./components/RealtimeTestNotice";
 
 import {Routes, Route, Navigate} from "react-router-dom";
 import { axiosInstance } from "./lib/axios";
@@ -36,6 +37,7 @@ const App = () =>{
    
     <div data-theme={theme}>
       <Navbar/>
+      <RealtimeTestNotice />
 
       <Routes>
         <Route path="/" element={authUser ?<HomePage/> : <Navigate to="/login"/>}/>

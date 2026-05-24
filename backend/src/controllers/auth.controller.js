@@ -3,6 +3,17 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js"
 
+const sendAuthResponse=(user, res, statusCode=200)=>{
+    generateToken(user._id,res)
+
+    res.status(statusCode).json({
+        _id: user._id,
+        fullName:user.fullName,
+        email:user.email,
+        profilePic: user.profilePic,
+    });
+};
+
 export const signup= async(req, res)=>{
    const { fullName, email, password} = req.body
    try{
@@ -28,15 +39,8 @@ export const signup= async(req, res)=>{
 
     if(newUser){
         //generate jwt token
-        generateToken(newUser._id,res)
         await newUser.save();
-
-        res.status(201).json({
-            _id: newUser._id,
-            fullName:newUser.fullName,
-            email:newUser.email,
-            profilePic: newUser.profilePic,
-        });
+        sendAuthResponse(newUser, res, 201);
 
     }else {
         res.status(400).json({message: "Invalid user data"});
@@ -63,14 +67,7 @@ export const login= async(req, res)=>{
             return res.status(400).json({message: "Invalid credentials"});
         }
 
-        generateToken(user._id, res)
-
-        res.status(200).json({
-            _id: user._id,
-            fullName:user.fullName,
-            email:user.email,
-            profilePic: user.profilePic,
-        })
+        sendAuthResponse(user, res)
     } catch (error) {
         console.log("Error in login controller", error.message);
         res.status(500).json({message:"Internal Server Error"});
@@ -97,7 +94,7 @@ export const updateProfile= async(req, res)=>{
        }
 
        const uploadResponse= await cloudinary.uploader.upload(profilePic)
-       const updatedUser= await User.findByIdandUpdate(userId, {profilePic:uploadResponse.secure_url}, {new: true})
+       const updatedUser= await User.findByIdAndUpdate(userId, {profilePic:uploadResponse.secure_url}, {new: true}).select("-password")
 
        res.status(200).json(updatedUser)
     } catch (error) {
@@ -111,7 +108,7 @@ export const updateProfile= async(req, res)=>{
 export const checkAuth= (req, res)=>{
     try{
         res.status(200).json(req.user);
-    }catch {
+    }catch (error) {
         console.log("Error in checkAuth controller", error.message);
         res.status(500).json({message:"Internal Server Error"});
     }
